@@ -1,4 +1,5 @@
 from __future__ import print_function
+from datetime import date
 
 import os.path
 
@@ -14,6 +15,10 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 # The ID and range of a sample spreadsheet.
 READING_SPREADSHEET_ID = '1DRp_uIevrEPHTiQ_gHquyxM2sDOfwVXk4sBH2LSS5VY'
 READING_RANGE_NAME = 'Infos!A:E'
+
+def get_today_date ():
+    today = date.today()
+    return f"{str(today.day).zfill(2)}/{str(today.month).zfill(2)}/{today.year}"
 
 
 def main():
@@ -51,9 +56,13 @@ def main():
             print('No data found.')
             return
 
+        today = get_today_date()
+
         for row in values:
             # Print columns A and E, which correspond to indices 0 and 4.
-            print('%s, %s' % (row[0], row[4]))
+            if row[0] == today:
+                print (row)
+                
     except HttpError as err:
         print(err)
 
