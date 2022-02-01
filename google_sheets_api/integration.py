@@ -12,8 +12,8 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # The ID and range of a sample spreadsheet.
-SAMPLE_SPREADSHEET_ID = '1DRp_uIevrEPHTiQ_gHquyxM2sDOfwVXk4sBH2LSS5VY'
-SAMPLE_RANGE_NAME = 'Infos!A1:'
+READING_SPREADSHEET_ID = '1DRp_uIevrEPHTiQ_gHquyxM2sDOfwVXk4sBH2LSS5VY'
+READING_RANGE_NAME = 'Infos!A:E'
 
 
 def main():
@@ -38,25 +38,24 @@ def main():
         with open('credentials/token.json', 'w') as token:
             token.write(creds.to_json())
 
-    # try:
-    #     service = build('sheets', 'v4', credentials=creds)
+    try:
+        service = build('sheets', 'v4', credentials=creds)
 
-    #     # Call the Sheets API
-    #     sheet = service.spreadsheets()
-    #     result = sheet.values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID,
-    #                                 range=SAMPLE_RANGE_NAME).execute()
-    #     values = result.get('values', [])
+        # Call the Sheets API
+        sheet = service.spreadsheets()
+        result = sheet.values().get(spreadsheetId=READING_SPREADSHEET_ID,
+                                    range=READING_RANGE_NAME).execute()
+        values = result.get('values', [])
 
-    #     if not values:
-    #         print('No data found.')
-    #         return
+        if not values:
+            print('No data found.')
+            return
 
-    #     print('Name, Major:')
-    #     for row in values:
-    #         # Print columns A and E, which correspond to indices 0 and 4.
-    #         print('%s, %s' % (row[0], row[4]))
-    # except HttpError as err:
-    #     print(err)
+        for row in values:
+            # Print columns A and E, which correspond to indices 0 and 4.
+            print('%s, %s' % (row[0], row[4]))
+    except HttpError as err:
+        print(err)
 
 
 if __name__ == '__main__':
