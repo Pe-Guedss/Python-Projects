@@ -14,24 +14,28 @@ from googleapiclient.errors import HttpError
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # The ID and range of a sample spreadsheet.
-READING_SPREADSHEET_ID = '1DRp_uIevrEPHTiQ_gHquyxM2sDOfwVXk4sBH2LSS5VY'
-READING_RANGE_NAME = 'Infos!A:E'
+PARTNER_SPREADSHEET_ID = '1DRp_uIevrEPHTiQ_gHquyxM2sDOfwVXk4sBH2LSS5VY'
+PARTNER_RANGE_INFOS = 'Infos!P4:AA'
 
-WRITING_SPREADSHEET_ID = "1sJS1RSb-0xu2bYe5tgCuN2E98bDt21ULIufejaQ89IM"
-WRITING_RANGE_NAME = "Processed Infos!A:E"
+SERVICE_SPREADSHEET_ID = "1sJS1RSb-0xu2bYe5tgCuN2E98bDt21ULIufejaQ89IM"
+SERVICE_RANGE_ALL = "Processed Infos!A:G"
 
 def get_today_date ():
     today = date.today()
-    return f"{str(today.day).zfill(2)}/{str(today.month).zfill(2)}/{today.year}"
+    return today.strftime("%d/%m/%Y")
 
 def get_today_rows (values:List[List], today:str, last_id: int):
     new_rows = []
 
     for row in values:
-        if row[0] == today:
-            last_id += 1
-            row.insert(0, last_id)
-            new_rows.append(row)
+        if row[8] == today:
+            if row[7] == "G":
+                last_id += 1
+                new_rows.append( [ last_id, row[0], "Fechado_Ganho", row[-1], "integration@ficticious.com", f"{ today } { date.today().strftime('%H:%M:%S') }", "Chamado Encerrado" ] )
+            
+            elif row[7] == "P":
+                last_id += 1
+                new_rows.append( [ last_id, row[0], "Fechado_Perdido", row[-1], "integration@ficticious.com", f"{ today } { date.today().strftime('%H:%M:%S') }", "Chamado Encerrado" ] )
     
     return new_rows
 
@@ -62,8 +66,8 @@ def get_new_insertions (last_id: int):
     try:
         service = build('sheets', 'v4', credentials=creds)
         sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=READING_SPREADSHEET_ID,
-                                    range=READING_RANGE_NAME).execute()
+        result = sheet.values().get(spreadsheetId=PARTNER_SPREADSHEET_ID,
+                                    range=PARTNER_RANGE_INFOS).execute()
         values = result.get('values', [])
 
         if not values:
@@ -87,8 +91,8 @@ def get_last_row ():
 
         sheet = service.spreadsheets()
 
-        result = sheet.values().append(spreadsheetId=WRITING_SPREADSHEET_ID,
-                                    range=WRITING_RANGE_NAME, 
+        result = sheet.values().append(spreadsheetId=SERVICE_SPREADSHEET_ID,
+                                    range=SERVICE_RANGE_ALL, 
                                     valueInputOption="USER_ENTERED",
                                     body = {"values":[]}).execute()
         appended_row = result.get('updates').get("updatedRange").replace("'", "")
@@ -109,7 +113,7 @@ def get_last_id ():
     try:
         service = build('sheets', 'v4', credentials=creds)
         sheet = service.spreadsheets()
-        result = sheet.values().get(spreadsheetId=WRITING_SPREADSHEET_ID,
+        result = sheet.values().get(spreadsheetId=SERVICE_SPREADSHEET_ID,
                                     range=last_row).execute()
         values = result.get('values', [])
 
@@ -131,11 +135,13 @@ def insert_new_rows (new_insertions):
         "values": new_insertions
     }
 
-    result = sheet.values().append(spreadsheetId=WRITING_SPREADSHEET_ID,
-                                   range=WRITING_RANGE_NAME, 
+    result = sheet.values().append(spreadsheetId=SERVICE_SPREADSHEET_ID,
+                                   range=SERVICE_RANGE_ALL, 
                                    valueInputOption="USER_ENTERED",
                                    body = body).execute()
     values = result.get('updates')
+
+    print (values)
 
 creds = authentication_process()
 
