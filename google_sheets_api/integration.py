@@ -1,5 +1,5 @@
 from __future__ import print_function
-from datetime import date
+from datetime import date, datetime
 
 import os.path
 from turtle import st
@@ -51,11 +51,23 @@ def get_today_rows (values: List[List], today: str, last_id: int) -> List[List]:
         if row[8] == today:
             if row[7] == "G":
                 last_id += 1
-                new_rows.append( [ last_id, row[0], "Fechado_Ganho", row[-1], "integration@ficticious.com", f"{ today } { date.today().strftime('%H:%M:%S') }", "Chamado Encerrado" ] )
+                new_rows.append( [ last_id, 
+                                   row[0], 
+                                   "Fechado_Ganho", 
+                                   "" if len (row) < 12 else row[-1], 
+                                   "integration@ficticious.com", 
+                                   f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
+                                   "Chamado Encerrado" ] )
             
             elif row[7] == "P":
                 last_id += 1
-                new_rows.append( [ last_id, row[0], "Fechado_Perdido", row[-1], "integration@ficticious.com", f"{ today } { date.today().strftime('%H:%M:%S') }", "Chamado Encerrado" ] )
+                new_rows.append( [ last_id, 
+                                   row[0], 
+                                   "Fechado_Perdido", 
+                                   row[-1], 
+                                   "integration@ficticious.com", 
+                                   f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
+                                   "Chamado Encerrado" ] )
     
     return new_rows
 
@@ -137,8 +149,13 @@ def get_last_row () -> str:
         appended_row = result.get('updates').get("updatedRange").replace("'", "")
 
         aux = appended_row.split("!A")
-        aux[1] = str(int(aux[1]) - 1)
-        last_row = "!A".join(aux)
+        if ( int(aux[1]) - 1 ) > 1:
+            aux[1] = str(int(aux[1]) - 1)
+            last_row = "!A".join(aux)
+        
+        else:
+            aux[1] = str(int(aux[1]))
+            last_row = "!A".join(aux)
 
         return last_row
     
@@ -162,7 +179,7 @@ def get_last_id () -> str:
 
         if not values:
             print('No data found.')
-            return
+            return 0
 
         return values[0][0]
     
