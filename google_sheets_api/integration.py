@@ -2,7 +2,7 @@ from __future__ import print_function
 from datetime import date, datetime
 
 import os.path
-from turtle import st
+import sys
 from typing import List
 
 from google.auth.transport.requests import Request
@@ -26,8 +26,22 @@ def get_today_date () -> str:
     ## Get Today Date
     This function is responsible to get the current date and return it as a string formated as dd/mm/yyyy.
     """
-    today = date.today()
-    return today.strftime("%d/%m/%Y")
+    try:
+        today = date.today()
+        today = today.strftime("%d/%m/%Y")
+    
+    except Exception as e:
+        print (f"""The following exception ocurred during the program execution: {e}.
+        
+        Something went wrong retrieving today's date.
+        
+        Please check the get_today_date function and see if the 'datetime' library is correctly installed in your machine.
+        """)
+
+        sys.exit(1)
+    
+    else:
+        return today
 
 def get_today_rows (values: List[List], today: str, last_id: int) -> List[List]:
     """
@@ -47,29 +61,45 @@ def get_today_rows (values: List[List], today: str, last_id: int) -> List[List]:
     """
     new_rows = []
 
-    for row in values:
-        if row[8] == today:
-            if row[7] == "G":
-                last_id += 1
-                new_rows.append( [ last_id, 
-                                   row[0], 
-                                   "Fechado_Ganho", 
-                                   "" if len (row) < 12 else row[-1], 
-                                   "integration@ficticious.com", 
-                                   f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
-                                   "Chamado Encerrado" ] )
-            
-            elif row[7] == "P":
-                last_id += 1
-                new_rows.append( [ last_id, 
-                                   row[0], 
-                                   "Fechado_Perdido", 
-                                   row[-1], 
-                                   "integration@ficticious.com", 
-                                   f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
-                                   "Chamado Encerrado" ] )
+    try:
+        for row in values:
+            if row[8] == today:
+                if row[7] == "G":
+                    last_id += 1
+                    new_rows.append( [ last_id, 
+                                    row[0], 
+                                    "Fechado_Ganho", 
+                                    "" if len (row) < 12 else row[-1], 
+                                    "integration@ficticious.com", 
+                                    f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
+                                    "Chamado Encerrado" ] )
+                
+                elif row[7] == "P":
+                    last_id += 1
+                    new_rows.append( [ last_id, 
+                                    row[0], 
+                                    "Fechado_Perdido", 
+                                    row[-1], 
+                                    "integration@ficticious.com", 
+                                    f"{ today } { datetime.now().strftime('%H:%M:%S') }", 
+                                    "Chamado Encerrado" ] )
     
-    return new_rows
+    except IndexError as err:
+        print (f"""The following exception ocurred during the program execution: {err}.
+        
+        Something went wrong acessing the sheet rows due to at least one of them not having all expected data.
+        
+        Please check your clients table and see if all rows are correctly filled and there is no data missing.""")
+
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}.")
+
+        sys.exit(1)
+
+    else:
+        return new_rows
 
 def authentication_process () -> Credentials:
     """
@@ -79,26 +109,37 @@ def authentication_process () -> Credentials:
 
     creds = None
 
-    if os.path.exists('credentials/token.json'):
-        creds = Credentials.from_authorized_user_file('credentials/token.json', SCOPES)
+    try:
+        if os.path.exists('credentials/token.json'):
+            creds = Credentials.from_authorized_user_file('credentials/token.json', SCOPES)
 
-    # If there are no (valid) credentials available, let the user log in.
-    if not creds or not creds.valid:
-        if creds and creds.expired and creds.refresh_token:
-            creds.refresh(Request())
+        # If there are no (valid) credentials available, let the user log in.
+        if not creds or not creds.valid:
+            if creds and creds.expired and creds.refresh_token:
+                creds.refresh(Request())
 
-        else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials/creds.json', SCOPES)
-            creds = flow.run_local_server(port=0)
-
-
-        # Save the credentials for the next run
-        with open('credentials/token.json', 'w') as token:
-            token.write(creds.to_json())
+            else:
+                flow = InstalledAppFlow.from_client_secrets_file(
+                    'credentials/creds.json', SCOPES)
+                creds = flow.run_local_server(port=0)
 
 
-    return creds
+            # Save the credentials for the next run
+            with open('credentials/token.json', 'w') as token:
+                token.write(creds.to_json())
+    
+    except FileNotFoundError as fileError:
+        print (f"The following exception ocurred during the program execution: {fileError}\n\nThere was a problem during the authentication process due to a file missing.\n\nPlease check the credentials folder present in this robot directory.")
+
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}")
+
+        sys.exit(1)
+
+    else:
+        return creds
 
 def get_new_insertions () -> List[List]:
     """
@@ -123,11 +164,22 @@ def get_new_insertions () -> List[List]:
 
         new_lines = get_today_rows (values, today, last_id)
 
+    except HttpError as req_err:
+        print (f"""The following exception ocurred during the program execution: {req_err}
+        
+        There was a problem during the API request process in the function get_new_insertions.
+        
+        Please check for connectivity issues, clients spreadsheet availability or see if the API service is activated on Google Cloud.""")
+
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}.")
+
+        sys.exit(1)
+    
+    else:
         return new_lines
-
-
-    except HttpError as err:
-        print(err)
 
 def get_last_row () -> str:
     """
@@ -156,11 +208,23 @@ def get_last_row () -> str:
         else:
             aux[1] = str(int(aux[1]))
             last_row = "!A".join(aux)
-
-        return last_row
     
-    except HttpError as err:
-        print(err)
+    except HttpError as req_err:
+        print (f"""The following exception ocurred during the program execution: {req_err}
+        
+        There was a problem during the API request process in the function get_last_row.
+        
+        Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud.""")
+
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}.")
+
+        sys.exit(1)
+    
+    else:
+        return last_row
 
 def get_last_id () -> str:
     """
@@ -176,15 +240,27 @@ def get_last_id () -> str:
         result = sheet.values().get(spreadsheetId=SERVICE_SPREADSHEET_ID,
                                     range=last_row).execute()
         values = result.get('values', [])
+    
+    except HttpError as req_err:
+        print (f"""The following exception ocurred during the program execution: {req_err}
+        
+        There was a problem during the API request process in the function get_last_id.
+        
+        Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud.""")
 
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}.")
+
+        sys.exit(1)
+    
+    else:
         if not values:
             print('No data found.')
             return 0
 
         return values[0][0]
-    
-    except HttpError as err:
-        print(err)
 
 def insert_new_rows (new_insertions: List[List]):
     """
@@ -196,21 +272,37 @@ def insert_new_rows (new_insertions: List[List]):
         - new_insertions: This parameter is a list containing all of the new rows to be inserted at the service spreadsheet.
     """
 
-    service = build('sheets', 'v4', credentials=creds)
+    try:
+        service = build('sheets', 'v4', credentials=creds)
 
-    sheet = service.spreadsheets()
+        sheet = service.spreadsheets()
 
-    body = {
-        "values": new_insertions
-    }
+        body = {
+            "values": new_insertions
+        }
 
-    result = sheet.values().append(spreadsheetId=SERVICE_SPREADSHEET_ID,
-                                   range=SERVICE_RANGE_ALL, 
-                                   valueInputOption="USER_ENTERED",
-                                   body = body).execute()
-    values = result.get('updates')
+        result = sheet.values().append(spreadsheetId=SERVICE_SPREADSHEET_ID,
+                                    range=SERVICE_RANGE_ALL, 
+                                    valueInputOption="USER_ENTERED",
+                                    body = body).execute()
+        values = result.get('updates')
+    
+    except HttpError as req_err:
+        print (f"""The following exception ocurred during the program execution: {req_err}
+        
+        There was a problem during the API request process in the function get_last_id.
+        
+        Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud.""")
 
-    print (values)
+        sys.exit(1)
+    
+    except Exception as e:
+        print (f"The following exception ocurred during the program execution: {e}.")
+
+        sys.exit(1)
+    
+    else:
+        print (values)
 
 
 
