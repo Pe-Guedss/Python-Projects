@@ -33,12 +33,11 @@ def get_today_date () -> str:
         today = today.strftime("%d/%m/%Y")
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}
-        
+        <br><br>
         Something went wrong retrieving today's date.
-        
+        <br><br>
         Please check the get_today_date function and see if the 'datetime' library is correctly installed in your machine.
         """
 
@@ -92,12 +91,11 @@ def get_today_rows (values: List[List], today: str, last_id: int) -> List[List]:
                                     "Chamado Encerrado" ] )
     
     except IndexError as err:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {err}
-        
+        <br><br>
         Something went wrong acessing the sheet rows due to at least one of them not having all expected data.
-        
+        <br><br>
         Please check your clients table and see if all rows are correctly filled and there is no data missing."""
 
         print (error_message)
@@ -106,8 +104,7 @@ def get_today_rows (values: List[List], today: str, last_id: int) -> List[List]:
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
 
         print (error_message)
@@ -146,12 +143,11 @@ def authentication_process () -> Credentials:
                 token.write(creds.to_json())
     
     except FileNotFoundError as fileError:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {fileError}
-
+        <br><br>
         There was a problem during the authentication process due to a file missing.
-        
+        <br><br>
         Please check the credentials folder present in this robot directory."""
 
         print (error_message)
@@ -160,8 +156,7 @@ def authentication_process () -> Credentials:
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
 
         print (error_message)
@@ -196,12 +191,11 @@ def get_new_insertions () -> List[List]:
         new_lines = get_today_rows (values, today, last_id)
 
     except HttpError as req_err:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {req_err}
-        
+        <br><br>
         There was a problem during the API request process in the function get_new_insertions.
-        
+        <br><br>
         Please check for connectivity issues, clients spreadsheet availability or see if the API service is activated on Google Cloud."""
 
         print (error_message)
@@ -210,8 +204,7 @@ def get_new_insertions () -> List[List]:
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
 
         print (error_message)
@@ -251,12 +244,11 @@ def get_last_row () -> str:
             last_row = "!A".join(aux)
     
     except HttpError as req_err:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {req_err}
-        
+        <br><br>
         There was a problem during the API request process in the function get_last_row.
-        
+        <br><br>
         Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud."""
 
         print (error_message)
@@ -265,8 +257,7 @@ def get_last_row () -> str:
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
         
         print (error_message)
@@ -283,8 +274,7 @@ def get_last_id () -> str:
     This function is used along with get_last_row, so it can retrieve the last row id from the service spreadsheet more quickly.
     """
 
-    # last_row = get_last_row ()
-    last_row = ""
+    last_row = get_last_row ()
 
     try:
         service = build('sheets', 'v4', credentials=creds)
@@ -294,12 +284,11 @@ def get_last_id () -> str:
         values = result.get('values', [])
     
     except HttpError as req_err:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {req_err}
-        
+        <br><br>
         There was a problem during the API request process in the function get_last_id.
-        
+        <br><br>
         Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud."""
 
         print (error_message)
@@ -308,8 +297,7 @@ def get_last_id () -> str:
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
 
         print (error_message)
@@ -350,12 +338,11 @@ def insert_new_rows (new_insertions: List[List]):
         values = result.get('updates')
     
     except HttpError as req_err:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {req_err}
-        
+        <br><br>
         There was a problem during the API request process in the function get_last_id.
-        
+        <br><br>
         Please check for connectivity issues, service spreadsheet availability or see if the API service is activated on Google Cloud."""
 
         print (error_message)
@@ -364,8 +351,7 @@ def insert_new_rows (new_insertions: List[List]):
         sys.exit(1)
     
     except Exception as e:
-        error_message = f"""The following exception ocurred during the program execution: 
-        
+        error_message = f"""        
         {e}"""
 
         print (error_message)
