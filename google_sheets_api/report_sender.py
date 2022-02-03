@@ -1,19 +1,29 @@
 import smtplib
 import os
+from email.message import EmailMessage
 
 EMAIL_ADRESS = os.environ.get('GMAIL_USER')
 EMAIL_PASSWORD = os.environ.get("GMAIL_PASSWORD")
 
-with smtplib.SMTP("smtp.gmail.com", 587) as smtp:
-    smtp.ehlo()
-    smtp.starttls()
-    smtp.ehlo()
+def send_error (error_message: str):
+    msg = EmailMessage()
+    msg["Subject"] = "Error in the Sheets Integration"
+    msg["From"] = EMAIL_ADRESS
+    msg["To"] = EMAIL_ADRESS
+    msg.set_content(f"""\
+        Good evening,
 
-    smtp.login(EMAIL_ADRESS, EMAIL_PASSWORD)
+        {error_message}
 
-    subject = "Error in the Sheets Integration"
-    body = "Error message"
+        Sorry for the inconvenience. Please contact your software vendor to more information.
 
-    msg = f"Subject: {subject}\n\n{body}"
+        Sincerely,
 
-    smtp.sendmail(EMAIL_ADRESS, EMAIL_ADRESS, msg)
+        Your Automation Process.
+    """)
+
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+
+        smtp.login(EMAIL_ADRESS, EMAIL_PASSWORD)
+
+        smtp.send_message(msg)
